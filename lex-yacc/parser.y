@@ -7,6 +7,8 @@
 int yylex();
 void yyerror(char *s);
 extern int lineno;
+extern int yy_init;
+int yylex_destroy();
 %}
 
 %union {
@@ -44,7 +46,7 @@ stmt_list: stmt				{ $$ = new_ast_stmtlist(lineno, $1); }
 var_list: IDENT ':' IDENT '=' expr				{ $$ = new_ast_vardec(lineno, $1, $3, $5); }
 		| IDENT ':' IDENT 						{ $$ = new_ast_vardec(lineno, $1, $3, NULL); }
 		| var_list ',' IDENT ':' IDENT			{ $$ = add_ast_vardec($1, $3, $5, NULL); }
-		| var_list ',' IDENT ':' IDENT '=' expr	{ $$ = add_ast_vardec($1, $3, $5, $7); printf("%p\n", $7); }
+		| var_list ',' IDENT ':' IDENT '=' expr	{ $$ = add_ast_vardec($1, $3, $5, $7); }
 		;
 
 stmt: ';'								{ $$ = new_ast_stmt_null(lineno); }
@@ -95,4 +97,6 @@ void yyerror(char *s) {
 
 int main() {
 	yyparse();
+	yylex_destroy(); 
+	// yy_init = 1;
 }

@@ -155,7 +155,7 @@ void free_ast_stmt(struct ast_clan *clan) {
 		case STMT_NULL:
 			break;
 		case STMT_BLOK:
-			free(clan->clan_stmt.stmt_blok);
+			free_ast_stablo(clan->clan_stmt.stmt_blok);
 			break;
 		case STMT_OP:
 			free_ast_op(clan->clan_stmt.op);
@@ -176,6 +176,7 @@ void free_ast_stmt(struct ast_clan *clan) {
 /* TODO */
 		default:
 			fprintf(stderr, "Ovo je greška!!!\n");
+			return;
 	}
 	free(clan);
 }
@@ -202,7 +203,7 @@ struct ast_clan *append_ast_stmtlist(int lineno, struct ast_clan *list,
 
 void free_ast_stmtlist(struct ast_clan *lista) {
 	for (size_t i = 0; i < lista->clan_stmtlist.dniz->vel; i++)
-		free_ast_stmt(lista->clan_stmtlist.dniz->niz[i]);
+		free_ast_stablo(lista->clan_stmtlist.dniz->niz[i]);
 
 	free_dniz(lista->clan_stmtlist.dniz);
 	free(lista);
@@ -230,6 +231,7 @@ struct ast_clan *new_ast_vardec(int lineno, struct ast_clan *ime,
 	tmp->lineno = lineno;
 	tmp->tip = CLAN_VARDEC;
 	tmp->clan_vardec.niz = new_dniz();
+
 	struct var_dec *t = malloc(sizeof(*t));
 	t->ime  = ime;
 	t->tip  = tip;
@@ -257,7 +259,7 @@ void free_ast_vardec(struct ast_clan *vardec) {
 		free_ast_stablo(t->ime);
 		free_ast_stablo(t->tip);
 		if (t->expr)
-			free(t->expr);
+			free_ast_stablo(t->expr);
 		free(t);
 	}
 	free_dniz(vardec->clan_vardec.niz);

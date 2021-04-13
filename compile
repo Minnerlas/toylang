@@ -1,0 +1,80 @@
+#!/bin/sh
+
+set -e
+TEMP="$(getopt -o dvo: -- "$@")"
+eval set -- "$TEMP"
+
+tmpfolder=".qbetmpfolder"
+
+kompajluj_fajl() {
+	# ul="$1"
+	qbeul="$1"
+	qbefajl="$(echo "${qbeul%.qbe}.s" | tr "/" "_")"
+	[ -d "$tmpfolder" ] ||  mkdir "$tmpfolder"
+	[ -n "$verbose" ] && echo ./qbe "./$qbeul" -o "$tmpfolder/$qbefajl"
+	./qbe "./$qbeul" -o "$tmpfolder/$qbefajl"
+
+	as "$tmpfolder/$qbefajl" -o "$tmpfolder/${qbefajl%.s}.o"
+}
+
+while true
+do
+	case "$1" in
+		-o)
+			case "$2" in
+				# /*)
+				# 	izl="$2"
+				# 	;;
+				""|-*)
+					printf "[Error] No output file given" 1>&2
+					exit 1
+					;;
+				*)
+					# izl="$(pwd)/$2"
+					izl="$2"
+					shift 2
+					;;
+			esac
+			;;
+
+		-d)
+			debug=1
+			shift
+			;;
+		-v)
+			verbose=1
+			shift
+			;;
+		--)
+			shift
+			break
+			;;
+	esac
+done
+
+[ -z "$@" ]   && printf "[Error] Must supply input file\n" 1>&2 && exit 1
+[ -z "$izl" ] && izl="a.out"
+
+# izl="ttest"
+for f in $@
+do
+	kompajluj_fajl "$f"
+done
+
+# fajl="test.qbe"
+# ifajl="${fajl%.qbe}.s"
+# echo "$ifajl"
+
+if [ -n "$verbose" ]
+then
+	echo ld -o "$izl" -dynamic-linker /lib64/ld-linux-x86-64.so.2 \
+		/usr/lib/crt1.o /usr/lib/crti.o -lc "$tmpfolder"/*.o /usr/lib/crtn.o
+fi
+
+ld -o "$izl" -dynamic-linker /lib64/ld-linux-x86-64.so.2 \
+	/usr/lib/crt1.o /usr/lib/crti.o -lc "$tmpfolder"/*.o /usr/lib/crtn.o
+
+if [ -z "$debug" ]
+then
+	rm -rvf "$tmpfolder" 1>/dev/null
+fi

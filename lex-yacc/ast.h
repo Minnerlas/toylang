@@ -32,6 +32,7 @@ enum ast_op {
 	AST_PUTA,
 	AST_UPUTA,
 	AST_PODELJENO,
+	AST_MOD,
 
 	AST_VECE,
 	AST_MANJE,
@@ -89,8 +90,11 @@ enum ast_clan_tip {
 };
 
 struct ast_clan_stmtlist {
+	struct dniz *dniz;
+	/*
 	struct ast_clan *stmt;
 	struct ast_clan *sled;
+	*/
 };
 
 struct ast_clan_blok {
@@ -100,6 +104,7 @@ struct ast_clan_blok {
 struct var_dec {
 	struct ast_clan *ime;
 	struct ast_clan *tip;
+	struct ast_clan *expr;
 };
 
 struct ast_clan_vardec {
@@ -155,9 +160,9 @@ struct ast_clan *append_ast_stmtlist(int lineno, struct ast_clan *list,
 struct ast_clan *new_ast_blok(int lineno, struct ast_clan *stmt_list);
 
 struct ast_clan *new_ast_vardec(int lineno, struct ast_clan *ime,
-	struct ast_clan *tip);
+	struct ast_clan *tip, struct ast_clan *expr);
 struct ast_clan *add_ast_vardec(struct ast_clan *vardec, struct ast_clan *ime,
-	struct ast_clan *tip);
+	struct ast_clan *tip, struct ast_clan *expr);
 
 void free_ast_stablo(struct ast_clan *stablo);
 void free_ast_vardec(struct ast_clan *vardec);

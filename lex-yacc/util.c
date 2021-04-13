@@ -22,12 +22,11 @@ void free_dniz(struct dniz *dniz) {
 
 int add_dniz(struct dniz *dniz, void *ul) {
     if (dniz->vel+1 >= dniz->stvvel) {
-        dniz->stvvel *= 2;
-        void *t = realloc(dniz->niz, dniz->stvvel*sizeof(*dniz->niz));
-        if (t)
+        void *t = realloc(dniz->niz, 2*(dniz->stvvel)*sizeof(void*));
+        if (t) {
+			dniz->stvvel *= 2;
             dniz->niz = t;
-        else {
-            dniz->stvvel /= 2;
+		} else {
             return -1;
         }
     }

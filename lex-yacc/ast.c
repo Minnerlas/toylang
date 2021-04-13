@@ -17,6 +17,7 @@ const char *ast_ops[] = {
 	[AST_PUTA]      = "*",
 	[AST_UPUTA]     = "*1",
 	[AST_PODELJENO] = "/",
+	[AST_MOD] = "%",
 
 	[AST_VECE]      = ">",
 	[AST_MANJE]     = "<",
@@ -180,6 +181,7 @@ void free_ast_stmt(struct ast_clan *clan) {
 }
 
 struct ast_clan *new_ast_stmtlist(int lineno, struct ast_clan *stmt) {
+	/*
 	struct ast_clan *tmp = calloc(1, sizeof(*tmp));
 	tmp->lineno = lineno;
 	tmp->tip = CLAN_STMTLIST;
@@ -188,32 +190,32 @@ struct ast_clan *new_ast_stmtlist(int lineno, struct ast_clan *stmt) {
 	tmp->clan_stmtlist.sled = NULL;
 
 	return tmp;
+	*/
+	struct ast_clan *tmp = calloc(1, sizeof(*tmp));
+	tmp->lineno = lineno;
+	tmp->tip = CLAN_STMTLIST;
+	tmp->clan_stmtlist.dniz = new_dniz();
+	add_dniz(tmp->clan_stmtlist.dniz, stmt);
+
+
+	return tmp;
 }
 
 struct ast_clan *append_ast_stmtlist(int lineno, struct ast_clan *list, 
 		struct ast_clan *stmt) {
 
-	struct ast_clan *tmp = calloc(1, sizeof(*tmp));
-	tmp->lineno = lineno;
-	tmp->tip = CLAN_STMTLIST;
-
-	tmp->clan_stmtlist.stmt = stmt;
-	tmp->clan_stmtlist.sled = NULL;
-	struct ast_clan *t = list;
-	while(t->clan_stmtlist.sled) t = t->clan_stmtlist.sled;
-	t->clan_stmtlist.sled = tmp;
+	(void)lineno;
+	add_dniz(list->clan_stmtlist.dniz, stmt);
 
 	return list;
 }
 
-void free_ast_stmtlist(struct ast_clan *list) {
-	struct ast_clan *t = list, *t1;
-	while (t) {
-		t1 = t->clan_stmtlist.sled;
-		free_ast_stablo(t->clan_stmtlist.stmt);
-		free(t);
-		t = t1;
-	}
+void free_ast_stmtlist(struct ast_clan *lista) {
+	for (size_t i = 0; i < lista->clan_stmtlist.dniz->vel; i++)
+		free_ast_stmt(lista->clan_stmtlist.dniz->niz[i]);
+
+	free_dniz(lista->clan_stmtlist.dniz);
+	free(lista);
 }
 
 struct ast_clan *new_ast_blok(int lineno, struct ast_clan *stmt_list) {
@@ -232,26 +234,28 @@ void free_ast_blok(struct ast_clan *blok) {
 }
 
 struct ast_clan *new_ast_vardec(int lineno, struct ast_clan *ime,
-	struct ast_clan *tip) {
+	struct ast_clan *tip, struct ast_clan *expr) {
 
 	struct ast_clan *tmp = calloc(1, sizeof(*tmp));
 	tmp->lineno = lineno;
 	tmp->tip = CLAN_VARDEC;
 	tmp->clan_vardec.niz = new_dniz();
 	struct var_dec *t = malloc(sizeof(*t));
-	t->ime = ime;
-	t->tip = tip;
+	t->ime  = ime;
+	t->tip  = tip;
+	t->expr = expr;
 	add_dniz(tmp->clan_vardec.niz, t);
 
 	return tmp;
 }
 
 struct ast_clan *add_ast_vardec(struct ast_clan *vardec, struct ast_clan *ime,
-	struct ast_clan *tip) {
+	struct ast_clan *tip, struct ast_clan *expr) {
 
 	struct var_dec *t = malloc(sizeof(*t));
-	t->ime = ime;
-	t->tip = tip;
+	t->ime  = ime;
+	t->tip  = tip;
+	t->expr = expr;
 	add_dniz(vardec->clan_vardec.niz, t);
 
 	return vardec;
@@ -262,6 +266,8 @@ void free_ast_vardec(struct ast_clan *vardec) {
 		struct var_dec *t = vardec->clan_vardec.niz->niz[i];
 		free_ast_stablo(t->ime);
 		free_ast_stablo(t->tip);
+		if (t->expr)
+			free(t->expr);
 		free(t);
 	}
 	free_dniz(vardec->clan_vardec.niz);
@@ -331,11 +337,15 @@ static void ast_print_stmt(int u, struct ast_clan *clan) {
 static void ast_print_stmtlist(int u, struct ast_clan *lista) {
 	uvuci(u);
 	printf("STMT_LIST:%d \n", lista->lineno);
+	/*
 	struct ast_clan *t = lista;
 	while (t) {
 		ast_print_stablo(u+1, t->clan_stmtlist.stmt);
 		t = t->clan_stmtlist.sled;
 	}
+	*/
+	for (size_t i = 0; i < lista->clan_stmtlist.dniz->vel; i++)
+		ast_print_stablo(u+1, lista->clan_stmtlist.dniz->niz[i]);
 }
 
 void ast_print_blok(int u, struct ast_clan *blok) {
@@ -357,6 +367,11 @@ void ast_print_vardec(int u, struct ast_clan *vardec) {
 		uvuci(u+1);
 		printf("IDENT_IME(%s): IDENT_TIP(%s)\n", t->ime->clan_ident.ime,
 			t->tip->clan_ident.ime);
+		if (t->expr) {
+			uvuci(u+1);
+			printf("=\n");
+			ast_print_stablo(u+2, t->expr);
+		}
 	}
 }
 

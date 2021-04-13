@@ -181,16 +181,6 @@ void free_ast_stmt(struct ast_clan *clan) {
 }
 
 struct ast_clan *new_ast_stmtlist(int lineno, struct ast_clan *stmt) {
-	/*
-	struct ast_clan *tmp = calloc(1, sizeof(*tmp));
-	tmp->lineno = lineno;
-	tmp->tip = CLAN_STMTLIST;
-
-	tmp->clan_stmtlist.stmt = stmt;
-	tmp->clan_stmtlist.sled = NULL;
-
-	return tmp;
-	*/
 	struct ast_clan *tmp = calloc(1, sizeof(*tmp));
 	tmp->lineno = lineno;
 	tmp->tip = CLAN_STMTLIST;

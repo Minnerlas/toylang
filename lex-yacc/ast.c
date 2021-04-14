@@ -285,6 +285,10 @@ struct ast_clan *new_ast_args(int lineno, struct ast_clan *ime,
 struct ast_clan *add_ast_args(struct ast_clan *vardec, struct ast_clan *ime,
 	struct ast_clan *tip) {
 
+	if (!vardec) {
+		vardec = new_ast_args(ime->lineno, ime, tip);
+		return vardec;
+	}
 	struct ast_arg *t = malloc(sizeof(*t));
 	t->ime  = ime;
 	t->tip  = tip;
@@ -430,18 +434,22 @@ void ast_print_args(int u, struct ast_clan *vardec) {
 		struct var_dec *t = vardec->clan_args.niz->niz[i];
 		uvuci(u+1);
 		printf("IDENT_IME(%s): IDENT_TIP(%s)\n", t->ime->clan_ident.ime,
-			t->tip->clan_ident.ime);
+			t->tip->clan_ident.ime); // Verovatno će biti izmenjeno
 	}
 }
 
 void ast_print_fundef(int u, struct ast_clan *fundef) {
 	uvuci(u);
-	printf("FUNDEF:% 4d %s (\n", fundef->lineno,
+	printf("FUNDEF:% 4d %s (", fundef->lineno,
 		fundef->clan_fundef.ime->clan_ident.ime);
-	if (fundef->clan_fundef.args)
+	if (fundef->clan_fundef.args) {
+		putchar('\n');
 		ast_print_args(u+1, fundef->clan_fundef.args);
-	uvuci(u);
-	printf(")");
+		uvuci(u);
+		printf(")");
+	} else
+		printf(")");
+
 	if (fundef->clan_fundef.ret) {
 		printf(" -> ");
 		ast_print_ident(0, fundef->clan_fundef.ret);

@@ -43,14 +43,9 @@ blok: '{' stmt_list '}'		{ $$ = new_ast_blok(lineno, $2); }
 
 arg_list: IDENT ':' IDENT				{ $$ = new_ast_args(lineno, $1, $3); }
 		| arg_list ',' IDENT ':' IDENT	{ $$ = add_ast_args($1, $3, $5); }
-		| 								{ $$ = NULL; } // printf("prazno\n"); }
+		| 								{ $$ = NULL; } 
 		;
 
-/*
-fun_dec: FUN IDENT '(' arg_list ')' blok				{ $$ = NULL; ast_print_stablo(0, $4); free_ast_stablo($2); free_ast_stablo($4); free_ast_stablo($6); }
-	   | FUN IDENT '(' arg_list ')' STRELA IDENT blok	{ $$ = NULL; ast_print_stablo(0, $4); free_ast_stablo($2); free_ast_stablo($4); free_ast_stablo($7); free_ast_stablo($8); }
-	   ;
-*/
 fun_dec: FUN IDENT '(' arg_list ')' blok				{ $$ = new_ast_fundef(lineno, $2, $4, NULL, $6); }
 	   | FUN IDENT '(' arg_list ')' STRELA IDENT blok	{ $$ = new_ast_fundef(lineno, $2, $4, $7, $8); }
 	   ;
@@ -97,13 +92,6 @@ expr: LIT_INTEGER				{ $$ = $1; }
 	| expr '?' expr ':' expr	{ $$ = new_ast_op(lineno, AST_TRINARNI,  $1, $3,   $5); }
 	| '(' expr ')'				{ $$ = $2; }
 	;
-
-/*
-arg_list: expr              {}
-		| arg_list ',' expr {}
-		| // NULL
-		;
-*/
 %%
 
 /* TODO: Napraviti da radi bolje */

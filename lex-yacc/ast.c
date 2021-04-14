@@ -158,7 +158,7 @@ void free_ast_stmt(struct ast_clan *clan) {
 			free_ast_stablo(clan->clan_stmt.stmt_blok);
 			break;
 		case STMT_OP:
-			free_ast_op(clan->clan_stmt.op);
+			free_ast_stablo(clan->clan_stmt.op);
 			break;
 		case STMT_IF:
 			free_ast_op(clan->clan_stmt.if_stmt.usl);
@@ -266,6 +266,69 @@ void free_ast_vardec(struct ast_clan *vardec) {
 	free(vardec);
 }
 
+struct ast_clan *new_ast_args(int lineno, struct ast_clan *ime,
+	struct ast_clan *tip) {
+
+	struct ast_clan *tmp = calloc(1, sizeof(*tmp));
+	tmp->lineno = lineno;
+	tmp->tip = CLAN_ARGS;
+	tmp->clan_args.niz = new_dniz();
+
+	struct ast_arg *t = malloc(sizeof(*t));
+	t->ime  = ime;
+	t->tip  = tip;
+	add_dniz(tmp->clan_args.niz, t);
+
+	return tmp;
+}
+
+struct ast_clan *add_ast_args(struct ast_clan *vardec, struct ast_clan *ime,
+	struct ast_clan *tip) {
+
+	struct ast_arg *t = malloc(sizeof(*t));
+	t->ime  = ime;
+	t->tip  = tip;
+	add_dniz(vardec->clan_args.niz, t);
+
+	return vardec;
+}
+
+void free_ast_args(struct ast_clan *vardec) {
+	for (size_t i = 0; i < vardec->clan_args.niz->vel; i++) {
+		struct ast_arg *t = vardec->clan_args.niz->niz[i];
+		free_ast_stablo(t->ime);
+		free_ast_stablo(t->tip);
+		free(t);
+	}
+	free_dniz(vardec->clan_args.niz);
+	free(vardec);
+}
+
+struct ast_clan *new_ast_fundef(int lineno, struct ast_clan *ime,
+	struct ast_clan *args, struct ast_clan *ret, struct ast_clan *blok) {
+
+	struct ast_clan *tmp = calloc(1, sizeof(*tmp));
+	tmp->lineno = lineno;
+	tmp->tip = CLAN_FUNDEF;
+
+	tmp->clan_fundef.ime  = ime;
+	tmp->clan_fundef.args = args;
+	tmp->clan_fundef.ret  = ret;
+	tmp->clan_fundef.blok = blok;
+
+	return tmp;
+}
+
+void free_ast_fundef(struct ast_clan *fundef) {
+	free_ast_stablo(fundef->clan_fundef.ime);
+	if (fundef->clan_fundef.args)
+		free_ast_stablo(fundef->clan_fundef.args);
+	if (fundef->clan_fundef.ret)
+		free_ast_stablo(fundef->clan_fundef.ret);
+	free_ast_stablo(fundef->clan_fundef.blok);
+	free(fundef);
+}
+
 static void uvuci(int n) {
 	for (int i = 0; i < n; i++)
 		// printf("  ");
@@ -329,13 +392,6 @@ static void ast_print_stmt(int u, struct ast_clan *clan) {
 static void ast_print_stmtlist(int u, struct ast_clan *lista) {
 	uvuci(u);
 	printf("STMT_LIST:%d \n", lista->lineno);
-	/*
-	struct ast_clan *t = lista;
-	while (t) {
-		ast_print_stablo(u+1, t->clan_stmtlist.stmt);
-		t = t->clan_stmtlist.sled;
-	}
-	*/
 	for (size_t i = 0; i < lista->clan_stmtlist.dniz->vel; i++)
 		ast_print_stablo(u+1, lista->clan_stmtlist.dniz->niz[i]);
 }
@@ -367,6 +423,34 @@ void ast_print_vardec(int u, struct ast_clan *vardec) {
 	}
 }
 
+void ast_print_args(int u, struct ast_clan *vardec) {
+	uvuci(u);
+	printf("ARGS:%d\n", vardec->lineno);
+	for (size_t i = 0; i < vardec->clan_args.niz->vel; i++) {
+		struct var_dec *t = vardec->clan_args.niz->niz[i];
+		uvuci(u+1);
+		printf("IDENT_IME(%s): IDENT_TIP(%s)\n", t->ime->clan_ident.ime,
+			t->tip->clan_ident.ime);
+	}
+}
+
+void ast_print_fundef(int u, struct ast_clan *fundef) {
+	uvuci(u);
+	printf("FUNDEF:% 4d %s (\n", fundef->lineno,
+		fundef->clan_fundef.ime->clan_ident.ime);
+	if (fundef->clan_fundef.args)
+		ast_print_args(u+1, fundef->clan_fundef.args);
+	uvuci(u);
+	printf(")");
+	if (fundef->clan_fundef.ret) {
+		printf(" -> ");
+		ast_print_ident(0, fundef->clan_fundef.ret);
+	} else
+		putchar('\n');
+
+	ast_print_blok(u+1, fundef->clan_fundef.blok);
+}
+
 void free_ast_stablo(struct ast_clan *stablo) {
 	if (!stablo) {
 		fprintf(stderr, "\x1b[31m(free) Stablo je prazno\x1b[0m\n");
@@ -393,6 +477,12 @@ void free_ast_stablo(struct ast_clan *stablo) {
 			break;
 		case CLAN_VARDEC:
 			free_ast_vardec(stablo);
+			break;
+		case CLAN_ARGS:
+			free_ast_args(stablo);
+			break;
+		case CLAN_FUNDEF:
+			free_ast_fundef(stablo);
 			break;
 		default:
 			fprintf(stderr, "Ovo je greška! %d\n", stablo->tip);
@@ -425,6 +515,12 @@ void ast_print_stablo(int u, struct ast_clan *stablo) {
 			break;
 		case CLAN_VARDEC:
 			ast_print_vardec(u, stablo);
+			break;
+		case CLAN_ARGS:
+			ast_print_args(u, stablo);
+			break;
+		case CLAN_FUNDEF:
+			ast_print_fundef(u, stablo);
 			break;
 		default:
 			fprintf(stderr, "Ovo je greška!!\n");

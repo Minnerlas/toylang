@@ -16,6 +16,8 @@ int lineno = 1;
 "else"                    return ELSE;
 "while"                   return WHILE;
 "var"                     return VAR;
+"fun"                     return FUN;
+"->"                      return STRELA;
 ({let}|_)({let}|{dig}|_)* { 
                               yylval.clan = new_ast_ident(lineno, yytext); 
                               return IDENT;

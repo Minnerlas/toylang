@@ -18,11 +18,11 @@ void yyrestart(FILE *input_file);
 }
 
 %token <clan> LIT_INTEGER IDENT
-%token IF WHILE VAR
+%token IF WHILE VAR FUN STRELA
 %nonassoc IFX
 %nonassoc ELSE
 
-%type  <clan> expr stmt stmt_list blok var_list
+%type  <clan> expr stmt stmt_list blok var_list arg_list fun_dec
 
 %right '='
 %right '?' ':'
@@ -33,22 +33,37 @@ void yyrestart(FILE *input_file);
 %nonassoc POSTF
 
 %%
-prg: stmt_list { ast_print_stablo(0, $1); free_ast_stablo($1); }
-   ;
+// fajl: stmt_list { ast_print_stablo(0, $1); free_ast_stablo($1); }
+fajl: fun_dec 	{ ast_print_stablo(0, $1); free_ast_stablo($1); }
+	;
 
 blok: '{' stmt_list '}'		{ $$ = new_ast_blok(lineno, $2); }
 	| '{' '}'				{ $$ = new_ast_blok(lineno, NULL); }
 	;
 
-stmt_list: stmt				{ $$ = new_ast_stmtlist(lineno, $1); }
-		 | stmt_list stmt	{ $$ = append_ast_stmtlist(lineno, $1, $2); }
-		 ;
+arg_list: IDENT ':' IDENT				{ $$ = new_ast_args(lineno, $1, $3); }
+		| arg_list ',' IDENT ':' IDENT	{ $$ = add_ast_args($1, $3, $5); }
+		| 								{ $$ = NULL; } // printf("prazno\n"); }
+		;
+
+/*
+fun_dec: FUN IDENT '(' arg_list ')' blok				{ $$ = NULL; ast_print_stablo(0, $4); free_ast_stablo($2); free_ast_stablo($4); free_ast_stablo($6); }
+	   | FUN IDENT '(' arg_list ')' STRELA IDENT blok	{ $$ = NULL; ast_print_stablo(0, $4); free_ast_stablo($2); free_ast_stablo($4); free_ast_stablo($7); free_ast_stablo($8); }
+	   ;
+*/
+fun_dec: FUN IDENT '(' arg_list ')' blok				{ $$ = new_ast_fundef(lineno, $2, $4, NULL, $6); }
+	   | FUN IDENT '(' arg_list ')' STRELA IDENT blok	{ $$ = new_ast_fundef(lineno, $2, $4, $7, $8); }
+	   ;
 
 var_list: IDENT ':' IDENT '=' expr				{ $$ = new_ast_vardec(lineno, $1, $3, $5); }
 		| IDENT ':' IDENT 						{ $$ = new_ast_vardec(lineno, $1, $3, NULL); }
-		| var_list ',' IDENT ':' IDENT			{ $$ = add_ast_vardec($1, $3, $5, NULL); }
 		| var_list ',' IDENT ':' IDENT '=' expr	{ $$ = add_ast_vardec($1, $3, $5, $7); }
+		| var_list ',' IDENT ':' IDENT			{ $$ = add_ast_vardec($1, $3, $5, NULL); }
 		;
+
+stmt_list: stmt				{ $$ = new_ast_stmtlist(lineno, $1); }
+		 | stmt_list stmt	{ $$ = append_ast_stmtlist(lineno, $1, $2); }
+		 ;
 
 stmt: ';'								{ $$ = new_ast_stmt_null(lineno); }
 	| expr ';'  						{ $$ = new_ast_stmt_expr(lineno, $1); }

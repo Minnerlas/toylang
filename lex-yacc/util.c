@@ -38,7 +38,7 @@ int add_dniz(struct dniz *dniz, void *ul) {
 }
 
 
-static uint64_t hes(const char *s) { // Treba da bude static
+static uint64_t hes(const char *s) {
 	const uint64_t p    = 31;
 	const uint64_t m    = 1e9 + 9;
 	uint64_t hash_value = 0;

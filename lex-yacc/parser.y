@@ -9,6 +9,7 @@ void yyerror(char *s);
 extern int lineno;
 extern int yy_init;
 int yylex_destroy();
+void yyrestart(FILE *input_file);
 %}
 
 %union {
@@ -98,5 +99,11 @@ void yyerror(char *s) {
 int main() {
 	yyparse();
 	yylex_destroy(); 
-	// yy_init = 1;
+	/*
+	FILE *ul = fopen("test", "r");
+	lineno = 1;
+	yyrestart(ul);
+	yyparse();
+	yylex_destroy(); 
+	*/
 }

@@ -34,7 +34,6 @@ int lineno = 1;
 \n                        { lineno++; }
 [ \t]+                    ; /* ignore whitespace */
 .                         return *yytext; /* yyerror("greska"); */
-<<EOF>>                   { yyterminate(); }
 %%
 
 int yywrap() {

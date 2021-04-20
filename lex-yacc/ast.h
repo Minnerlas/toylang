@@ -41,6 +41,8 @@ enum ast_op {
 	AST_JEDNAKO,
 	AST_NEJED,
 	AST_TRINARNI,
+
+	AST_FUNCALL,
 };
 
 struct ast_clan_op {
@@ -55,6 +57,7 @@ enum ast_stmt_tip {
 	STMT_IF,
 	STMT_WHILE,
 	STMT_VARDEC,
+	STMT_RET,
 };
 
 struct ast_clan_stmt {
@@ -72,6 +75,7 @@ struct ast_clan_stmt {
 			struct ast_clan *blok;
 		} while_stmt;
 		struct ast_clan *vardec;
+		struct ast_clan *ret;
 	};
 };
 
@@ -87,14 +91,11 @@ enum ast_clan_tip {
 	CLAN_VARDEC,
 	CLAN_ARGS,
 	CLAN_FUNDEF,
+	CLAN_PARAMLIST,
 };
 
 struct ast_clan_stmtlist {
 	struct dniz *dniz;
-	/*
-	struct ast_clan *stmt;
-	struct ast_clan *sled;
-	*/
 };
 
 struct ast_clan_blok {
@@ -119,6 +120,7 @@ struct ast_arg {
 struct ast_clan_args {
 	struct dniz *niz;
 };
+// typedef struct dniz *ast_clan_args;
 
 struct ast_clan_fundef {
 	struct ast_clan *ime;
@@ -127,8 +129,16 @@ struct ast_clan_fundef {
 	struct ast_clan *blok;
 };
 
+struct ast_clan_paramlist {
+	struct dniz *niz;
+};
+
+struct ast_clan_funcall {
+	struct ast_clan *ident;
+	struct ast_clan *params;
+};
+
 union ast_clanovi {
-	// struct ast_clan_expr clan_expr;
 	struct ast_clan_int clan_int;
 	struct ast_clan_ident clan_ident;
 	struct ast_clan_op clan_op;
@@ -136,14 +146,16 @@ union ast_clanovi {
 	struct ast_clan_stmtlist clan_stmtlist;
 	struct ast_clan_blok clan_blok;
 	struct ast_clan_vardec clan_vardec;
+	struct ast_clan_args clan_args;
 	struct ast_clan_fundef clan_fundef;
+	struct ast_clan_paramlist clan_paramlist;
+	struct ast_clan_funcall clan_funcall;
 };
 
 struct ast_clan {
 	int lineno;
 	enum ast_clan_tip tip;
 	union {
-		// struct ast_clan_expr clan_expr;
 		struct ast_clan_int clan_int;
 		struct ast_clan_ident clan_ident;
 		struct ast_clan_op clan_op;
@@ -153,6 +165,8 @@ struct ast_clan {
 		struct ast_clan_vardec clan_vardec;
 		struct ast_clan_args clan_args;
 		struct ast_clan_fundef clan_fundef;
+		struct ast_clan_paramlist clan_paramlist;
+		struct ast_clan_funcall clan_funcall;
 	};
 };
 
@@ -171,6 +185,7 @@ struct ast_clan *new_ast_stmt_if(int lineno, struct ast_clan *usl,
 struct ast_clan *new_ast_stmt_while(int lineno, struct ast_clan *usl,
 	struct ast_clan *blok);
 struct ast_clan *new_ast_stmt_vardec(int lineno, struct ast_clan *vardec);
+struct ast_clan *new_ast_stmt_ret(int lineno, struct ast_clan *expr);
 
 struct ast_clan *new_ast_stmtlist(int lineno, struct ast_clan *stmt);
 struct ast_clan *append_ast_stmtlist(int lineno, struct ast_clan *list,
@@ -190,6 +205,10 @@ struct ast_clan *add_ast_args(struct ast_clan *vardec, struct ast_clan *ime,
 
 struct ast_clan *new_ast_fundef(int lineno, struct ast_clan *ime,
 	struct ast_clan *args, struct ast_clan *ret, struct ast_clan *blok);
+
+struct ast_clan *new_ast_paramlist(int lineno, struct ast_clan *expr);
+struct ast_clan *add_ast_paramlist(struct ast_clan *params,
+	struct ast_clan *expr);
 
 void free_ast_stablo(struct ast_clan *stablo);
 void free_ast_vardec(struct ast_clan *vardec);

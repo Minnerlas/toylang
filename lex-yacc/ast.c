@@ -26,6 +26,8 @@ const char *ast_ops[] = {
 	[AST_JEDNAKO]   = "==",
 	[AST_NEJED]     = "!=",
 	[AST_TRINARNI]  = "?:",
+
+	[AST_FUNCALL]   = "funcall",
 };
 
 const char *stmt_tip[] = {
@@ -150,6 +152,16 @@ struct ast_clan *new_ast_stmt_vardec(int lineno, struct ast_clan *vardec) {
 	return tmp;
 }
 
+struct ast_clan *new_ast_stmt_ret(int lineno, struct ast_clan *expr) {
+	struct ast_clan *tmp = calloc(1, sizeof(*tmp));
+	tmp->lineno = lineno;
+	tmp->tip = CLAN_STMT;
+	tmp->clan_stmt.tip = STMT_RET;
+	tmp->clan_stmt.ret = expr;
+
+	return tmp;
+}
+
 void free_ast_stmt(struct ast_clan *clan) {
 	switch(clan->clan_stmt.tip) {
 		case STMT_NULL:
@@ -172,6 +184,9 @@ void free_ast_stmt(struct ast_clan *clan) {
 			break;
 		case STMT_VARDEC:
 			free_ast_vardec(clan->clan_stmt.vardec);
+			break;
+		case STMT_RET:
+			free_ast_stablo(clan->clan_stmt.ret);
 			break;
 /* TODO */
 		default:
@@ -333,6 +348,31 @@ void free_ast_fundef(struct ast_clan *fundef) {
 	free(fundef);
 }
 
+struct ast_clan *new_ast_paramlist(int lineno, struct ast_clan *expr) {
+	struct ast_clan *tmp = calloc(1, sizeof(*tmp));
+	tmp->lineno = lineno;
+	tmp->tip = CLAN_PARAMLIST;
+
+	tmp->clan_paramlist.niz = new_dniz();
+	add_dniz(tmp->clan_paramlist.niz, expr);
+
+	return tmp;
+}
+
+struct ast_clan *add_ast_paramlist(struct ast_clan *params,
+	struct ast_clan *expr) {
+
+	add_dniz(params->clan_paramlist.niz, expr);
+	return params;
+}
+
+void free_ast_paramlist(struct ast_clan *params) {
+	for (size_t i = 0; i < params->clan_paramlist.niz->vel; i++)
+		free_ast_stablo(params->clan_paramlist.niz->niz[i]);
+	free_dniz(params->clan_paramlist.niz);
+	free(params);
+}
+
 static void uvuci(int n) {
 	for (int i = 0; i < n; i++)
 		// printf("  ");
@@ -387,6 +427,10 @@ static void ast_print_stmt(int u, struct ast_clan *clan) {
 			break;
 		case STMT_VARDEC:
 			ast_print_vardec(u+1, clan->clan_stmt.vardec);
+			break;
+		case STMT_RET:
+			uvuci(u); printf("RET\n");
+			ast_print_stablo(u+1, clan->clan_stmt.ret);
 			break;
 		default:
 			fprintf(stderr, "Ovo je greška!!!!\n");
@@ -459,6 +503,15 @@ void ast_print_fundef(int u, struct ast_clan *fundef) {
 	ast_print_blok(u+1, fundef->clan_fundef.blok);
 }
 
+void ast_print_paramlist(int u, struct ast_clan *stablo) {
+	uvuci(u);
+	printf("PARAMS:%d\n", stablo->lineno);
+
+	for (size_t i = 0; i < stablo->clan_paramlist.niz->vel; i++)
+		ast_print_stablo(u+1, stablo->clan_paramlist.niz->niz[i]);
+
+}
+
 void free_ast_stablo(struct ast_clan *stablo) {
 	if (!stablo) {
 		fprintf(stderr, "\x1b[31m(free) Stablo je prazno\x1b[0m\n");
@@ -491,6 +544,9 @@ void free_ast_stablo(struct ast_clan *stablo) {
 			break;
 		case CLAN_FUNDEF:
 			free_ast_fundef(stablo);
+			break;
+		case CLAN_PARAMLIST:
+			free_ast_paramlist(stablo);
 			break;
 		default:
 			fprintf(stderr, "Ovo je greška! %d\n", stablo->tip);
@@ -530,8 +586,12 @@ void ast_print_stablo(int u, struct ast_clan *stablo) {
 		case CLAN_FUNDEF:
 			ast_print_fundef(u, stablo);
 			break;
+		case CLAN_PARAMLIST:
+			ast_print_paramlist(u, stablo);
+			break;
 		default:
 			fprintf(stderr, "Ovo je greška!!\n");
+			if (stablo)
+				fprintf(stderr, "%d\n", stablo->tip);
 	}
 }
-

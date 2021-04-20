@@ -27,6 +27,7 @@ struct hclan {
 struct dniz *new_dniz();
 void free_dniz(struct dniz *dniz);
 int add_dniz(struct dniz *dniz, void *ul);
+void clr_dniz(struct dniz *dniz);
 
 
 struct hmapa *new_hmapa();

@@ -18,11 +18,11 @@ void yyrestart(FILE *input_file);
 }
 
 %token <clan> LIT_INTEGER IDENT
-%token IF WHILE VAR FUN STRELA
+%token IF WHILE VAR FUN STRELA RET
 %nonassoc IFX
 %nonassoc ELSE
 
-%type  <clan> expr stmt stmt_list blok var_list arg_list fun_dec
+%type  <clan> expr stmt stmt_list blok var_list arg_list fun_dec param_list
 
 %right '='
 %right '?' ':'
@@ -56,6 +56,10 @@ var_list: IDENT ':' IDENT '=' expr				{ $$ = new_ast_vardec(lineno, $1, $3, $5);
 		| var_list ',' IDENT ':' IDENT			{ $$ = add_ast_vardec($1, $3, $5, NULL); }
 		;
 
+param_list: expr					{ $$ = new_ast_paramlist(lineno, $1); }
+		  | param_list ',' expr		{ $$ = add_ast_paramlist($1, $3); }
+		  ;
+
 stmt_list: stmt				{ $$ = new_ast_stmtlist(lineno, $1); }
 		 | stmt_list stmt	{ $$ = append_ast_stmtlist(lineno, $1, $2); }
 		 ;
@@ -67,6 +71,7 @@ stmt: ';'								{ $$ = new_ast_stmt_null(lineno); }
 	| IF '(' expr ')' stmt ELSE stmt	{ $$ = new_ast_stmt_if(lineno, $3, $5, $7); }
 	| WHILE '(' expr ')' stmt 			{ $$ = new_ast_stmt_while(lineno, $3, $5); }
 	| VAR var_list ';'					{ $$ = new_ast_stmt_vardec(lineno, $2); }
+	| RET expr ';'						{ $$ = new_ast_stmt_ret(lineno, $2); }
 	;
 
 expr: LIT_INTEGER				{ $$ = $1; }
@@ -89,8 +94,10 @@ expr: LIT_INTEGER				{ $$ = $1; }
 	| expr LE  expr 			{ $$ = new_ast_op(lineno, AST_MANJEJED,  $1, $3,   NULL); }
 	| expr EQ  expr 			{ $$ = new_ast_op(lineno, AST_JEDNAKO,   $1, $3,   NULL); }
 	| expr NE  expr 			{ $$ = new_ast_op(lineno, AST_NEJED,     $1, $3,   NULL); }
-	| expr '?' expr ':' expr	{ $$ = new_ast_op(lineno, AST_TRINARNI,  $1, $3,   $5); }
+	| expr '?' expr ':' expr	{ $$ = new_ast_op(lineno, AST_TRINARNI,  $1, $3,   $5);   }
 	| '(' expr ')'				{ $$ = $2; }
+	| IDENT '(' param_list ')'	{ $$ = new_ast_op(lineno, AST_FUNCALL,   $1, $3,   NULL); }
+	| IDENT '(' ')'				{ $$ = new_ast_op(lineno, AST_FUNCALL,   $1, NULL, NULL); }
 	;
 %%
 

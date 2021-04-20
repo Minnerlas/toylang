@@ -23,7 +23,7 @@ void free_dniz(struct dniz *dniz) {
 
 int add_dniz(struct dniz *dniz, void *ul) {
 	if (dniz->vel+1 >= dniz->stvvel) {
-		void *t = realloc(dniz->niz, 2*(dniz->stvvel)*sizeof(void*));
+		void **t = realloc(dniz->niz, 2*(dniz->stvvel)*sizeof(*t));
 		if (t) {
 			dniz->stvvel *= 2;
 			dniz->niz = t;
@@ -35,6 +35,10 @@ int add_dniz(struct dniz *dniz, void *ul) {
 	dniz->niz[dniz->vel++] = ul;
 
 	return 0;
+}
+
+void clr_dniz(struct dniz *dniz) {
+	dniz->vel = 0;
 }
 
 

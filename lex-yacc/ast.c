@@ -17,7 +17,8 @@ const char *ast_ops[] = {
 	[AST_PUTA]      = "*",
 	[AST_UPUTA]     = "*1",
 	[AST_PODELJENO] = "/",
-	[AST_MOD] = "%",
+	[AST_MOD]       = "%",
+	[AST_UZV]       = "!{}",
 
 	[AST_VECE]      = ">",
 	[AST_MANJE]     = "<",
@@ -37,6 +38,7 @@ const char *stmt_tip[] = {
 	[STMT_IF]     = "IF",
 	[STMT_WHILE]  = "WHILE",
 	[STMT_VARDEC] = "VARDEC",
+	[STMT_RET]    = "RETURN",
 };
 
 

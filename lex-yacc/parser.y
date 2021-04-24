@@ -29,7 +29,7 @@ void yyrestart(FILE *input_file);
 %left GE LE EQ NE '>' '<'
 %left '+' '-'
 %left '*' '/' '%'
-%nonassoc UMINUS UPUTA PP MM
+%nonassoc UMINUS UPUTA PP MM '!'
 %nonassoc POSTF
 
 %%
@@ -80,6 +80,7 @@ expr: LIT_INTEGER				{ $$ = $1; }
 	| MM expr					{ $$ = new_ast_op(lineno, AST_PREDMM,    $2, NULL, NULL); }
 	| expr PP  %prec POSTF		{ $$ = new_ast_op(lineno, AST_POSLPP,    $1, NULL, NULL); }
 	| expr MM  %prec POSTF		{ $$ = new_ast_op(lineno, AST_POSLMM,    $1, NULL, NULL); }
+	| '!' expr %prec UPUTA		{ $$ = new_ast_op(lineno, AST_UZV,       $2, NULL, NULL); } /* PREC ?? */
 	| '*' expr %prec UPUTA		{ $$ = new_ast_op(lineno, AST_UPUTA,     $2, NULL, NULL); }
 	| '-' expr %prec UMINUS		{ $$ = new_ast_op(lineno, AST_UMINUS,    $2, NULL, NULL); }
 	| expr '=' expr 			{ $$ = new_ast_op(lineno, AST_DODELA,    $1, $3,   NULL); }

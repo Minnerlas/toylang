@@ -33,7 +33,7 @@ int lineno = 1;
 "!="                      return NE;
 "++"                      return PP;
 "--"                      return MM;
-[-;+/*<>()=?:,]           return *yytext;
+[-;+/*<>()=?:,!]          return *yytext;
 \n                        { lineno++; }
 [ \t]+                    ; /* ignore whitespace */
 .                         return *yytext; /* yyerror("greska"); */

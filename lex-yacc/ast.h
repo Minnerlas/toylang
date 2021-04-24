@@ -33,6 +33,7 @@ enum ast_op {
 	AST_UPUTA,
 	AST_PODELJENO,
 	AST_MOD,
+	AST_UZV,
 
 	AST_VECE,
 	AST_MANJE,
